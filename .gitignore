@@ -1,3 +1,9 @@
+.settings/
+target/
+.project
+.factorypath
+.classpath
+
 *.class
 
 # Mobile Tools for Java (J2ME)
