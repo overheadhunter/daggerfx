@@ -36,7 +36,7 @@ public class CoffeeMakerController {
 	public void brew(ActionEvent actionEvent) {
 		heater.on();
 		pump.pump();
-		result.setText(" [_]P coffee1! [_]P");
+		result.setText(resources.getString("success"));
 		heater.off();
 	}
 

@@ -12,7 +12,7 @@
 
 	<children>
 		<Label fx:id="result" />
-		<Button text="brew" onAction="#brew"/>
+		<Button text="%brew" onAction="#brew"/>
 	</children>
 
 </VBox>
