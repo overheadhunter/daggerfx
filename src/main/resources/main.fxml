@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.net.URL?>
-<?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Button?>
-
-<VBox prefHeight="100.0" prefWidth="150.0" xmlns:fx="http://javafx.com/fxml">
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<VBox fx:controller="daggerfx.CoffeeMakerController" prefHeight="100.0" prefWidth="150.0" xmlns:fx="http://javafx.com/fxml">
 
 	<padding>
 		<Insets top="20" right="20" bottom="20" left="20.0" />
@@ -14,7 +12,7 @@
 
 	<children>
 		<Label fx:id="result" />
-		<Button text="brew" onAction="#brew" />
+		<Button text="brew" onAction="#brew"/>
 	</children>
 
 </VBox>

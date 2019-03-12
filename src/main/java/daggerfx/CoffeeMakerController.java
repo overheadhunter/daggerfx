@@ -1,20 +1,27 @@
 package daggerfx;
 
+import javax.inject.Inject;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 
-import javax.inject.Inject;
+@FxAppScoped
+public class CoffeeMakerController {
 
-class CoffeeMakerController extends AbstractFXMLViewController {
-
-	private final Heater heater; // Create a possibly costly heater only when we use it.
+	private final Heater heater;
 	private final Pump pump;
 
 	@FXML
 	private Label result;
+
+	@FXML
+	private URL location;
+
+	@FXML
+	private ResourceBundle resources;
 
 	@Inject
 	CoffeeMakerController(Heater heater, Pump pump) {
@@ -22,26 +29,14 @@ class CoffeeMakerController extends AbstractFXMLViewController {
 		this.pump = pump;
 	}
 
-	@Override
-	public void initialize(URL location, ResourceBundle resources) {
-
+	public void initialize() {
+		System.out.println("url: " + location + ", rb: " + resources);
 	}
 
-	@Override
-	protected URL getFxmlResourceUrl() {
-		return getClass().getResource("/main.fxml");
-	}
-
-	@Override
-	protected ResourceBundle getFxmlResourceBundle() {
-		return null;
-	}
-
-	@FXML
-	public void brew() {
+	public void brew(ActionEvent actionEvent) {
 		heater.on();
 		pump.pump();
-		result.setText(" [_]P coffee! [_]P");
+		result.setText(" [_]P coffee1! [_]P");
 		heater.off();
 	}
 

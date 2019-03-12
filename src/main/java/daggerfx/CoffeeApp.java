@@ -3,22 +3,32 @@ package daggerfx;
 import java.io.IOException;
 
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class CoffeeApp extends Application {
 
-	public static void main(String[] args) throws IOException {
+	private static final CoffeeComponent LAUNCHER = DaggerCoffeeComponent.create();
+
+	public static void main(String[] args) {
 		Application.launch(args);
 	}
 
 	@Override
-	public void start(Stage primaryStage) throws Exception {
-		final CoffeeShop coffeeShop = DaggerCoffeeShop.create();
-		final CoffeeMakerController ctrl = coffeeShop.coffeeMakerController().get();
+	public void start(Stage primaryStage) throws IOException {
+		FxAppComponent fxApp = LAUNCHER.fxApp() //
+				.application(this) //
+				.mainWindow(primaryStage) //
+				.build();
 
-		final Stage stage = ctrl.createStage();
-		stage.setResizable(false);
-		stage.show();
+		FXMLLoader loader  = fxApp.loader(getClass().getResource("/main.fxml"));
+		Parent root = loader.load();
+
+		primaryStage.setScene(new Scene(root));
+		primaryStage.setResizable(false);
+		primaryStage.show();
 	}
 
 }
