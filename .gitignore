@@ -1,3 +1,4 @@
+bin
 *.class
 
 # Package Files #
@@ -19,3 +20,5 @@ target/
 .idea/dictionaries
 .idea/**/libraries/
 *.iml
+.gradle
+build
