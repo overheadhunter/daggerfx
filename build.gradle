@@ -1,25 +1,26 @@
 plugins {
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.0.10'  //requires JDK11+
-    id 'com.gluonhq.client-gradle-plugin' version '0.1.40'  //requires GraalVM 21.1+
+    id 'com.gluonhq.gluonfx-gradle-plugin' version '1.0.1'  //requires GraalVM 21.1+
     id 'eclipse'
+    id 'org.beryx.jlink' version '2.24.0'
 }
 
 wrapper {
-    gradleVersion = '7.0.2'
+    gradleVersion = '7.1'
     distributionType = Wrapper.DistributionType.ALL
 }
 
 group = 'de.sebastianstenzel'
 version = '0.0.1-SNAPSHOT'
-description = 'Sample JavaFX app using Dagger 2 DI of controllers and services'
+description = 'Sample JavaFX app using Dagger 2 for DI of controllers and services'
 
 ext {
     mainClassName = 'daggerfx.CoffeeApp'
     launcherClassName = 'daggerfx.Launcher'
     moduleName = 'daggerfx' //name defined in module-info.java
     javafxVersion = '16'  //requires JDK11+
-    daggerVersion = '2.36'
+    daggerVersion = '2.37'
     currentPlatform = javafx.platform.classifier
 }
 
@@ -54,7 +55,12 @@ configurations {
 
 dependencies {
     annotationProcessor "com.google.dagger:dagger-compiler:$daggerVersion"
-    implementation "com.google.dagger:dagger:$daggerVersion"
+    implementation("com.google.dagger:dagger:$daggerVersion") {
+        //exclude the original non-modular javax.inject
+        exclude group: 'javax.inject', module: 'javax.inject'
+    }
+    //modular javax.inject
+    implementation 'com.guicedee.services:javax.inject:1.0.20.2'
 
     ['linux', 'mac', 'win'].each { classifier ->
         if (classifier != currentPlatform) {
@@ -138,8 +144,21 @@ task uberJar(type: Jar) {
     duplicatesStrategy 'exclude'
 }
 
-gluonClient {
+gluonfx {
     compilerArgs = [
         '--allow-incomplete-classpath',
     ]
 }
+
+jlink {
+    def jlinkImageName = "${project.moduleName}-${project.version}-$currentPlatform"
+    imageDir = file("$buildDir/$jlinkImageName")
+    imageZip = file("$buildDir/${project.distsDirName}/${jlinkImageName}.zip")
+    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    launcher {
+        name = project.moduleName
+        noConsole = true  //applicable to Windows only
+    }
+    forceMerge 'javax.inject'
+}
+

@@ -4,13 +4,13 @@
     <artifactId>daggerfx</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>daggerfx</name> <!-- name of the resulting native executable -->
-    <description>Sample JavaFX app using Dagger 2 DI of controllers and services</description>
+    <description>Sample JavaFX app using Dagger 2 for DI of controllers and services</description>
 
     <properties>
-        <dagger.version>2.36</dagger.version>
+        <dagger.version>2.37</dagger.version>
         <javafx.version>16</javafx.version>
         <javafx.maven.plugin.version>0.0.6</javafx.maven.plugin.version>
-        <client.maven.plugin.version>0.1.40</client.maven.plugin.version>
+        <gluonfx.maven.plugin.version>1.0.1</gluonfx.maven.plugin.version>
         <main.module>daggerfx</main.module> <!-- name defined in module-info.java -->
         <main.class>daggerfx.CoffeeApp</main.class>
         <launcher.class>daggerfx.Launcher</launcher.class>
@@ -34,6 +34,19 @@
             <groupId>com.google.dagger</groupId>
             <artifactId>dagger</artifactId>
             <version>${dagger.version}</version>
+            <exclusions>
+                <!-- exclude the original non-modular javax.inject -->
+                <exclusion>
+                    <groupId>javax.inject</groupId>
+                    <artifactId>javax.inject</artifactId>
+                </exclusion>
+            </exclusions> 
+        </dependency>
+        <!-- modular javax.inject -->
+        <dependency>
+            <groupId>com.guicedee.services</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1.0.20.2</version>
         </dependency>
     </dependencies>
 
@@ -121,12 +134,99 @@
             </plugin>
             <plugin>
                 <groupId>com.gluonhq</groupId>
-                <artifactId>client-maven-plugin</artifactId>
-                <version>${client.maven.plugin.version}</version>
+                <artifactId>gluonfx-maven-plugin</artifactId>
+                <version>${gluonfx.maven.plugin.version}</version>
                 <configuration>
                     <target>${client.target}</target>
                     <mainClass>${main.class}</mainClass>
                 </configuration>
+            </plugin>
+            <!-- folowing plugins are needed to produce a jlink image for the project -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/modules</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>true</overWriteSnapshots>
+                            <excludeTransitive>false</excludeTransitive>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <outputDirectory>${project.build.directory}/modules</outputDirectory>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <version>1.0.0.RC1</version>
+                <executions>
+                    <execution>
+                        <id>add-module-infos</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/modules</outputDirectory>
+                            <overwriteExistingFiles>true</overwriteExistingFiles>
+                            <modules>
+                                <!-- modularize the non-modular dagger library -->
+                                <module>
+                                    <artifact>
+                                        <groupId>com.google.dagger</groupId>
+                                        <artifactId>dagger</artifactId>
+                                        <version>${dagger.version}</version>
+                                    </artifact>
+                                    <moduleInfoSource>
+                                        module dagger {
+                                            requires transitive javax.inject;
+                                            exports dagger;
+                                            exports dagger.assisted;
+                                            exports dagger.internal;
+                                            exports dagger.multibindings;
+                                        }
+                                    </moduleInfoSource>
+                                </module>
+                            </modules>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>create-runtime-image</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>create-runtime-image</goal>
+                        </goals>
+                        <configuration>
+                            <modulePath>
+                                <path>${project.build.directory}/modules</path>
+                            </modulePath>
+                            <modules>
+                                <module>daggerfx</module>
+                            </modules>
+                            <jarInclusionPolicy>APP_WITH_DEPENDENCIES</jarInclusionPolicy>
+                            <launcher>
+                                <name>daggerfx</name>
+                                <module>${main.module}/${main.class}</module>
+                            </launcher>
+                            <outputDirectory>${project.build.directory}/${main.module}-${project.version}-${javafx.platform}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
